@@ -1,0 +1,46 @@
+name: git
+version: "2.44"
+summary: fast, scalable, distributed revision control system
+description: |
+  Git is a fast, scalable, distributed revision control system
+  with an unusually rich command set that provides both high-level
+  operations and full access to internals. Git is an Open Source
+  project covered by the GNU General Public License version 2
+  (some parts of it are under different licenses, compatible with
+  the GPLv2). It was originally written by Linus Torvalds with help
+  of a group of hackers around the net.
+
+base: core22
+confinement: strict
+
+parts:
+  git:
+    plugin: make
+    make-parameters:
+      - prefix=/usr
+    source-type: git
+    source: https://github.com/git/git
+    build-packages:
+      - build-essential
+      - gettext
+        # - libtirpc-dev
+      - zlib1g-dev
+      - libssl-dev
+      - libcurl4-openssl-dev
+    stage-packages:
+      - zlib1g
+      - openssh-client
+      - curl
+      - expat
+      - openssl
+      - perl
+
+apps:
+  git:
+    command: /usr/bin/git
+    plugs:
+      - ssh-keys
+      - network
+      - home
+      - removable-media
+      - raw-usb
