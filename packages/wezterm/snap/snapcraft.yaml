@@ -1,4 +1,5 @@
 name: wezterm
+# TODO `wezterm -V` does not work. Need to fix build
 version: "20240203-110809-5046fc22"
 summary: A GPU-accelerated cross-platform terminal emulator and multiplexer
 website: https://wezfurlong.org/wezterm/
@@ -9,18 +10,15 @@ description: |
   A GPU-accelerated cross-platform terminal emulator and multiplexer written by @wez and implemented in Rust
 
 base: core22
-confinement: devmode
+grade: stable
+confinement: strict
 compression: lzo
-
 
 parts:
   wezterm:
     plugin: rust
     source-type: git
     source: https://github.com/wez/wezterm.git
-#    organize:
-#      wezterm: /usr/bin/wezterm
-#      wezterm-gui: /usr/bin/wezterm-gui
     build-packages:
       - bsdutils
       - cmake
@@ -48,16 +46,10 @@ parts:
       - xdg-utils
       - xorg-dev
     stage-packages:
-      # - libc6
-      - libegl1
-      - libegl-mesa0
+      # TODO remove more of these packages
       - libfontconfig1
-      - libgcc-s1
       - libssl3
-      - libwayland-client0
-      - libwayland-egl1
       - libx11-6
-      - libx11-data
       - libx11-xcb1
       - libxcb-image0
       - libxcb-util1
@@ -80,21 +72,23 @@ parts:
 apps:
   wezterm:
     plugs:
+      - x11
       - opengl
       - wayland
       - graphics-core22
       - mesa-core22
+      - desktop
+      - home
     command-chain:
       - bin/graphics-core22-wrapper
     command: wezterm-gui
     environment:
       LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+      HOME: /home/$USER
 
 layout:
   /usr/share/X11/xkb:
     bind: $SNAP/usr/share/X11/xkb
- #/usr/share/X11/locale:
-   #bind: $SNAP/usr/share/X11/locale
   # Start graphics-core22
   /usr/share/libdrm:
     bind: $SNAP/graphics/libdrm
