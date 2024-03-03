@@ -1,0 +1,113 @@
+name: wezterm
+version: "20240203-110809-5046fc22"
+summary: A GPU-accelerated cross-platform terminal emulator and multiplexer
+website: https://wezfurlong.org/wezterm/
+icon: wezterm.png
+license: MIT
+issues: https://github.com/wez/wezterm/issues
+description: |
+  A GPU-accelerated cross-platform terminal emulator and multiplexer written by @wez and implemented in Rust
+
+base: core22
+confinement: devmode
+compression: lzo
+
+
+parts:
+  wezterm:
+    plugin: rust
+    source-type: git
+    source: https://github.com/wez/wezterm.git
+#    organize:
+#      wezterm: /usr/bin/wezterm
+#      wezterm-gui: /usr/bin/wezterm-gui
+    build-packages:
+      - bsdutils
+      - cmake
+      - dpkg-dev
+      - fakeroot
+      - gcc
+      - g++
+      - libegl1-mesa-dev
+      - libssl-dev
+      - libfontconfig1-dev
+      - libwayland-dev
+      - libx11-xcb-dev
+      - libxcb-ewmh-dev
+      - libxcb-icccm4-dev
+      - libxcb-image0-dev
+      - libxcb-keysyms1-dev
+      - libxcb-randr0-dev
+      - libxcb-render0-dev
+      - libxcb-xkb-dev
+      - libxkbcommon-dev
+      - libxkbcommon-x11-dev
+      - libxcb-util-dev
+      - lsb-release
+      - python3
+      - xdg-utils
+      - xorg-dev
+    stage-packages:
+      # - libc6
+      - libegl1
+      - libegl-mesa0
+      - libfontconfig1
+      - libgcc-s1
+      - libssl3
+      - libwayland-client0
+      - libwayland-egl1
+      - libx11-6
+      - libx11-data
+      - libx11-xcb1
+      - libxcb-image0
+      - libxcb-util1
+      - libxcb1
+      - libxkbcommon-x11-0
+      - libxkbcommon0
+      - tzdata
+      - zlib1g
+  graphics-core22:
+    after: 
+      - wezterm
+    source: https://github.com/canonical/graphics-core.git
+    plugin: dump
+    override-prime: |
+      craftctl default
+      ${CRAFT_PART_SRC}/bin/graphics-core22-cleanup mesa-core22 nvidia-core22
+    prime:
+    - bin/graphics-core22-wrapper
+
+apps:
+  wezterm:
+    plugs:
+      - opengl
+      - wayland
+      - graphics-core22
+      - mesa-core22
+    command-chain:
+      - bin/graphics-core22-wrapper
+    command: wezterm-gui
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+
+layout:
+  /usr/share/X11/xkb:
+    bind: $SNAP/usr/share/X11/xkb
+ #/usr/share/X11/locale:
+   #bind: $SNAP/usr/share/X11/locale
+  # Start graphics-core22
+  /usr/share/libdrm:
+    bind: $SNAP/graphics/libdrm
+  /usr/share/drirc.d:
+    symlink: $SNAP/graphics/drirc.d
+  /usr/share/X11/XErrorDB:
+    symlink: $SNAP/graphics/X11/XErrorDB
+  /usr/share/X11/locale:
+    symlink: $SNAP/graphics/X11/locale
+  # Eng graphics-core22
+
+plugs:
+  graphics-core22:
+    interface: content
+    target: $SNAP/graphics
+    default-provider: mesa-core22`
