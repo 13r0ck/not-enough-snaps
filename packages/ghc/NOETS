@@ -1,0 +1,27 @@
+git reset --hard --recurse-submodules && git clean -fdx
+
+for release in $(git tag -l *-release | awk '/8.8.4/,/9.8.2/'); do git reset --hard --recurse-submodules && git clean -fdx && git checkout -f $release && git submodule update --init --recursive; done
+
+for release in $(git tag -l *-release | awk '/8.8.4/,/9.8.2/'); do \
+	ls -A | grep -v ".git" | xargs rm -rf
+	git reset --hard &&\
+	git checkout $release &&\
+	ls -A | grep -v ".git" | xargs rm -rf
+	git reset --hard &&\
+	git submodule update --init --recursive &&\
+	git status; done
+
+for release in $(git tag -l *-release | awk '/8.8.4/,/9.8.2/'); do
+	ls -A | grep -v ".git" | xargs rm -rf
+	git reset --hard
+	git checkout $release
+	ls -A | grep -v ".git" | xargs rm -rf
+	git reset --hard
+	git submodule update --init --recursive
+	git status
+	./boot
+	autoreconf
+	./configure
+	make -j$(nproc) && make install
+	ghc --version
+done
