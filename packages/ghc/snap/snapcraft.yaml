@@ -1,5 +1,5 @@
 name: ghc
-version: "9.8.2"
+version: "9.0.1"
 summary: The Glorious Glasgow Haskell Compiler.
 description: |
   GHC is a state-of-the-art, open source compiler and interactive
@@ -14,12 +14,25 @@ parts:
     source-type: git
     source: https://gitlab.haskell.org/ghc/ghc.git
     override-build: |
-      echo "$SNAPCRAFT_PROJECT_VERSION"
-      apt-cache policy ghc
-      exit 1
-      #./boot
-      #./configure
-      #./hadrian/build -j8
+      #echo "$SNAPCRAFT_PROJECT_VERSION"
+      #apt-cache policy ghc
+      for release in $(git tag -l *-release | awk '/8.8.4/,/9.8.2/' | tail -n+2); do
+        ls -A | grep -v ".git" | xargs rm -rf
+        git reset --hard
+        git checkout $release
+        ls -A | grep -v ".git" | xargs rm -rf
+        git reset --hard
+        git submodule update --init --recursive
+        git status
+        autoreconf || true
+        ./boot || true
+        ./configure || true
+        autoreconf
+        ./boot
+        ./configure
+        make -j$(nproc) && make install
+        ghc --version
+      done
     build-packages:
       - ghc
       - autoconf
@@ -31,6 +44,6 @@ parts:
 
 apps:
   ghc:
-    command: ghc
+    command: /usr/bin/ghc
     plugs:
       - home
