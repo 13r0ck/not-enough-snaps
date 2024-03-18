@@ -14,9 +14,19 @@ parts:
     source-type: git
     source: https://gitlab.haskell.org/ghc/ghc.git
     override-build: |
-      #echo "$SNAPCRAFT_PROJECT_VERSION"
-      #apt-cache policy ghc
-      for release in $(git tag -l *-release | awk '/8.8.4/,/9.8.2/' | tail -n+2); do
+      # Seems like a bug in snapcraft? '|| true' shouldn't be necessary here
+      bootstrap=$(apt-cache policy ghc | grep -o -m 1 '[0-9]*\.[0-9]*\.[0-9]*') || true
+
+      # Build the newest version of haskell by bootstrapping from the version built in previous iteration of loop.
+      for release in $(git tag -l *-release | sort --version-sort | awk "/$bootstrap/,/$SNAPCRAFT_PROJECT_VERSION/" | tail -n+2); do
+
+        # Install deps for curently installed version of hashell
+        cabal update
+        cabal install cabal-install --overwrite-policy=always
+        cabal install happy --overwrite-policy=always
+        cabal install alex --overwrite-policy=always
+
+        # Build new version of haskell
         ls -A | grep -v ".git" | xargs rm -rf
         git reset --hard
         git checkout $release
@@ -32,14 +42,16 @@ parts:
         ./configure
         make -j$(nproc) && make install
         ghc --version
+        exit 1
       done
     build-packages:
       - ghc
       - autoconf
       - automake
+      - pkg-config
+      - python3-sphinx
       - build-essential
-      - happy
-      - alex
+      - cabal-install
       - hscolour
 
 apps:
