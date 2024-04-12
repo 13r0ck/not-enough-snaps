@@ -1,5 +1,5 @@
 name: lean4
-version: "4.6.1"
+version: "4.7.0"
 summary: Lean 4 programming language and theorem prover 
 description: |
   Lean is a functional programming language that makes it easy
@@ -35,6 +35,8 @@ parts:
     plugin: nil
   lake:
     plugin: nil
+    stage-packages:
+      - git
   leanmake:
     plugin: nil
 
