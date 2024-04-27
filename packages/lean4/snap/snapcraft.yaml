@@ -1,0 +1,141 @@
+name: lean4
+version: "4.7.0"
+summary: Lean 4 programming language and theorem prover 
+description: |
+  Lean is a functional programming language that makes it easy
+  to write correct and maintainable code. You can also use Lean
+  as an interactive theorem prover. Lean programming primarily
+  involves defining types and functions. This allows your focus
+  to remain on the problem domain and manipulating its data,
+  rather than the details of programming.
+
+base: core22
+confinement: strict
+compression: lzo
+
+parts:
+  lean4:
+    plugin: cmake
+    source: https://github.com/leanprover/lean4.git
+    source-branch: v$SNAPCRAFT_PROJECT_VERSION
+    source-type: git
+      # source-depth: 1
+    build-packages:
+      - git
+      - ccache
+      - clang
+      - libgmp-dev
+    stage-packages:
+      - clang
+      - libclang-cpp-dev
+      - libgmp-dev
+      - libc6-dev
+    override-build: |
+      cmake $CRAFT_PART_SRC \
+        -D CMAKE_C_COMPILER=/usr/bin/clang \
+        -D CMAKE_CXX_COMPILER=/usr/bin/clang++ \
+        --install-prefix $CRAFT_PART_INSTALL/usr
+      make -j$(nproc) stage3 install
+    organize:
+      lib32: usr/lib32/
+  leanc:
+    plugin: nil
+  lake:
+    plugin: nil
+    stage-packages:
+      - git
+  leanmake:
+    plugin: nil
+
+
+apps:
+  leanc:
+    command: /usr/bin/leanc
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib
+    plugs:
+      - home
+  lean:
+    command: /usr/bin/lean
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib
+    plugs:
+      - home
+  lake:
+    command: /usr/bin/lake
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib32
+      #PATH: $PATH:$SNAP/usr/bin
+      #LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP_DATA/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP_COMMON/usr/lib/x86_64-linux-gnu:$SNAP_DATA/usr/lib:$SNAP_COMMON/usr/lib:$SNAP/usr/lib:/usr/include/x86_64-linux-gnu:$SNAP/usr/include/x86_64-linux-gnu/:$SNAP_COMMON/usr/include/:$SNAP_COMMON/usr/include/x86_64-linux-gnu:/usr/include:$SNAP_DATA/lib32
+      #SNAP_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$SNAP_DATA/usr/lib/x86_64-linux-gnu:$SNAP/usr/lib/x86_64-linux-gnu:$SNAP_COMMON/usr/lib/x86_64-linux-gnu:$SNAP_DATA/usr/lib:$SNAP_COMMON/usr/lib:$SNAP/usr/lib:/usr/include/x86_64-linux-gnu:$SNAP/usr/include/x86_64-linux-gnu/:$SNAP_COMMON/usr/include/:$SNAP_COMMON/usr/include/x86_64-linux-gnu:/usr/include:$SNAP/lib32
+        #SNAP_LIBRARY_PATH: $SNAP_LIBRARY_PATH:/usr/lib/gcc/x86_64-linux-gnu/11
+      #SNAP_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$SNAP_DATA/usr/lib/gcc/x86_64-linux-gnu/11
+      #SNAP_LIBRARY_PATH: $SNAP_LIBRARY_PATH:$SNAP_DATA/usr/lib/x86_64-linux-gnu
+      #CPATH: $CPATH:$SNAP/usr/include/x86_64-linux-gnu/bits
+      #CPATH: $CPATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+        #LIBRARY_PATH: $LIBRARY_PATH:$SNAP/usr/lib/$CRAFT_ARCH_TRIPLET_BUILD_FOR
+        #/snap/lean4/x31/usr/lib/llvm-14/lib/libclang-cpp.so
+    plugs:
+      - home
+  leanmake:
+    command: /usr/bin/leanmake
+    environment:
+      LD_LIBRARY_PATH: $LD_LIBRARY_PATH:$SNAP/usr/lib
+    plugs:
+      - home
+
+layout:
+  /usr/bin/clang:
+    symlink: $SNAP/usr/bin/clang
+  /usr/lib/x86_64-linux-gnu/libgmp.so:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libgmp.so.10.4.1
+  /usr/lib/x86_64-linux-gnu/libgmpxx.so:
+    bind-file: $SNAP_DATA/usr/lib/x86_64-linux-gnu/libgmpxx.so.4.6.1
+  /usr/lib/x86_64-linux-gnu/libc.so:
+    symlink: $SNAP_DATA/usr/lib/x86_64-linux-gnu/libc.so
+  /usr/lib/x86_64-linux-gnu/libpthread.so:
+    bind-file: $SNAP_DATA/usr/lib/x86_64-linux-gnu/libpthread.so
+  /usr/lib/x86_64-linux-gnu/libm.so:
+    bind-file: $SNAP_DATA/usr/lib/x86_64-linux-gnu/libm.so
+  /usr/lib/x86_64-linux-gnu/libdl.so:
+    bind-file: $SNAP_DATA/usr/lib/x86_64-linux-gnu/libdl.so
+  /usr/lib/x86_64-linux-gnu/libgmp.a:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libgmp.a
+  /usr/lib/x86_64-linux-gnu/libgmpxx.a:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libgmpxx.a
+  /usr/lib/x86_64-linux-gnu/libm.a:
+    symlink: $SNAP/usr/lib/x86_64-linux-gnu/libm-2.35.a
+  /usr/lib/x86_64-linux-gnu/libdl.a:
+    symlink: $SNAP/usr/lib/x86_64-linux-gnu/libdl.a
+  /usr/lib/x86_64-linux-gnu/libmvec.a:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libmvec.a
+  /usr/lib/x86_64-linux-gnu/libpthread.a:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libpthread.a
+  /usr/lib/x86_64-linux-gnu/libpthread_nonshared.a:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/libpthread_nonshared.a
+  /usr/lib/x86_64-linux-gnu/libc.a:
+    symlink: $SNAP/usr/lib/x86_64-linux-gnu/libc.a
+  /usr/lib/x86_64-linux-gnu/Scrt1.o:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/Scrt1.o
+  /usr/lib/x86_64-linux-gnu/crti.o:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/crti.o
+  /usr/lib/x86_64-linux-gnu/crtn.o:
+    bind-file: $SNAP/usr/lib/x86_64-linux-gnu/crtn.o
+  /usr/lib/gcc:
+    bind: $SNAP/usr/lib/gcc
+  /usr/include/gmp.h:
+    bind-file: $SNAP_COMMON/usr/include/gmp.h
+  /usr/include/x86_64-linux-gnu/gmp.h:
+    bind-file: $SNAP_COMMON/usr/include/x86_64-linux-gnu/gmp.h
+  /usr/include/lean_gmp.h:
+    bind-file: $SNAP_COMMON/usr/include/lean_gmp.h
+  /usr/include/gmpxx.h:
+    bind-file: $SNAP_COMMON/usr/include/gmpxx.h
+  /usr/include/x86_64-linux-gnu/gmpxx.h:
+    bind-file: $SNAP_COMMON/usr/include/x86_64-linux-gnu/gmpxx.h
+  /usr/include/x86_64-linux-gnu/bits:
+    symlink: $SNAP/usr/include/x86_64-linux-gnu/bits
+  /usr/include/x86_64-linux-gnu/sys:
+    symlink: $SNAP/usr/include/x86_64-linux-gnu/sys
+  /usr/include/x86_64-linux-gnu/gnu:
+    symlink: $SNAP/usr/include/x86_64-linux-gnu/gnu
